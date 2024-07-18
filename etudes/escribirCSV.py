@@ -10,7 +10,6 @@ escribir_csv.writerow([1,4,1,18])
 fichero.close()
 
 
-
 # con un dictWriter, con diccionarios
 
 with open("data/grupos_zoo.csv", "a" , newline = "") as fichero: # error se cierra archivo bien con with y close no hace falta

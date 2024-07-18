@@ -11,9 +11,36 @@ class Director:
     
     def __eq__(self, other: object) -> bool:
         isEqual = False
-        if isinstance(other, Director):
+        if isinstance(other, self.__class__): # self.__class__ es lo mismo que Director
             isEqual = self.nombre == other.nombre and self.id == other.id       
         return isEqual
+    
+    def __hash__(self) -> int:
+        return hash((self.id, self.nombre))
+
+
+class Pelicula:
+    def __init__(self, titulo, sinopsis, director: object, id = -1) -> None:
+        self.titulo = titulo
+        self.sinopsis = sinopsis
+        self.id = id
+        self.director = director
+        
+    @property    
+    def director(self):
+        return self._director
+    
+    @director.setter
+    def director(self, value):
+        if isinstance(value, Director):
+            self._director = value
+            self._director_id = value.id
+        elif isinstance(value, int):
+            self._director = None
+            self._director_id = value
+        else:
+            raise TypeError(f"{value} debe ser un entero o instancia de Director")
+    
 
 class DAO(ABC):
     
@@ -55,8 +82,8 @@ class DAO_CSV_Director(DAO):
         directores = self.todos()
         if director in directores:
             directores.remove(director)
-        with open(self.path, "w", newline='', encoding='utf-8') as fichero:
-            escribir_csv = csv.DictWriter(fichero, delimiter=";", quotechar="'", fieldnames=['nombre', 'id'], lineterminator='\n')
+        with open(self.path, "w", newline="") as fichero:
+            escribir_csv = csv.DictWriter(fichero, delimiter=";", quotechar="'", fieldnames=['nombre', 'id'], lineterminator='\n') # lineterminator en google
             escribir_csv.writeheader() # lo he tenido que consultar porque me escirbía sin las etiquetas nombre e id
             for director in directores:
                 escribir_csv.writerow({"nombre": director.nombre, "id": director.id})
@@ -75,5 +102,4 @@ class DAO_CSV_Director(DAO):
             for registro in lector_csv:
                 lista.append(Director(registro["nombre"], int(registro["id"])))
         return lista
-
 

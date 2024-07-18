@@ -1,4 +1,4 @@
-from app.modelos import Director, DAO_CSV_Director
+from app.modelos import Director, Pelicula, DAO_CSV_Director
 
 def test_create_director():
     director = Director("Robert Redford", -1)
@@ -41,3 +41,36 @@ def test_dao_directores_borrar_director():
     assert Director("Charlie Chaplin", 8) not in directores
 
     dao.guardar(Director("Charlie Chaplin", 8))
+
+def test_create_pelicula():
+
+    pelicula = Pelicula("El señor de los anillos", "Sauron es muy malo", 9)
+
+    assert pelicula.titulo == "El señor de los anillos"
+    assert pelicula.sinopsis == "Sauron es muy malo"
+    assert pelicula._director_id == 9
+    assert pelicula.id == -1
+    assert pelicula.director is None
+
+def test_create_pelicula_and_informar_director_completo():
+    director = Director("Peter Jackson", 9)
+    pelicula = Pelicula("El señor de los anillos", "Sauron es muy malo", director)
+
+    assert pelicula.titulo == "El señor de los anillos"
+    assert pelicula.sinopsis == "Sauron es muy malo"
+    assert pelicula._director_id == 9
+    assert pelicula.id == -1
+    assert pelicula.director is director
+
+def test_asigna_director_a_pelicula():
+        pelicula = Pelicula("El señor de los anillos", "Sauron es muy malo", -1)
+        director = Director("Peter Jackson", 9)
+
+        pelicula.director = director
+
+        assert pelicula.titulo == "El señor de los anillos"
+        assert pelicula.sinopsis == "Sauron es muy malo"
+        assert pelicula._director_id == 9
+        assert pelicula.id == -1
+        assert pelicula.director == director
+
