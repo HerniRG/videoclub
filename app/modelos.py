@@ -25,11 +25,12 @@ class DAO(ABC):
     @abstractmethod
     def actualizar(self, instancia):
         pass
-    
+    """
+
     @abstractmethod
     def borrar(self, id):
         pass
-    """
+    
 
     @abstractmethod
     def consultar(self, id):
@@ -49,6 +50,17 @@ class DAO_CSV_Director(DAO):
             escribir_csv = csv.DictWriter(fichero, delimiter = ";", quotechar = "'", fieldnames = ['nombre','id'], lineterminator='\n')
             escribir_csv.writerow({"nombre": instancia.nombre, "id": instancia.id})
     
+    def borrar(self, id): # tengo que escribir el CSV entero?? DUDA
+        director = self.consultar(id)
+        directores = self.todos()
+        if director in directores:
+            directores.remove(director)
+        with open(self.path, "w", newline='', encoding='utf-8') as fichero:
+            escribir_csv = csv.DictWriter(fichero, delimiter=";", quotechar="'", fieldnames=['nombre', 'id'], lineterminator='\n')
+            escribir_csv.writeheader() # lo he tenido que consultar porque me escirbía sin las etiquetas nombre e id
+            for director in directores:
+                escribir_csv.writerow({"nombre": director.nombre, "id": director.id})
+                        
     def consultar(self, id):
         directores = self.todos()
         for director in directores:
