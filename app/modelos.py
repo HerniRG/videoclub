@@ -12,28 +12,29 @@ class Director:
     def __eq__(self, other: object) -> bool:
         isEqual = False
         if isinstance(other, Director):
-            if self.nombre == other.nombre and self.id == other.id:
-                isEqual = True        
+            isEqual = self.nombre == other.nombre and self.id == other.id       
         return isEqual
 
 class DAO(ABC):
-    """
+    
     @abstractmethod
     def guardar(self, instancia):
         pass
-
+    
+    """
     @abstractmethod
     def actualizar(self, instancia):
         pass
-
+    
     @abstractmethod
     def borrar(self, id):
         pass
+    """
 
     @abstractmethod
     def consultar(self, id):
         pass
-    """
+    
     @abstractmethod
     def todos(self):
         pass
@@ -42,6 +43,18 @@ class DAO_CSV_Director(DAO):
     
     def __init__(self, path):
         self.path = path
+
+    def guardar(self, instancia):
+        with open(self.path, "a", newline="") as fichero:
+            escribir_csv = csv.DictWriter(fichero, delimiter = ";", quotechar = "'", fieldnames = ['nombre','id'], lineterminator='\n')
+            escribir_csv.writerow({"nombre": instancia.nombre, "id": instancia.id})
+    
+    def consultar(self, id):
+        directores = self.todos()
+        for director in directores:
+            if director.id == id:
+                return director
+        return None
 
     def todos(self):
         with open(self.path, "r", newline="") as fichero:
