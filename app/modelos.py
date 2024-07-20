@@ -1,7 +1,26 @@
 from abc import ABC, abstractmethod
 import csv
 
-class Director:
+class Model(ABC):
+    @classmethod
+    @abstractmethod
+    def create_from_dict(cls, diccionario):
+        pass
+
+    @classmethod
+    @abstractmethod
+    def create_dict_from_instance(cls, instancia):
+        pass
+
+class Director(Model):
+    @classmethod
+    def create_from_dict(cls, diccionario):
+        return cls(diccionario["nombre"], int(diccionario["id"]))
+    
+    @classmethod
+    def create_dict_from_instance(cls, instancia):
+        return {"nombre": instancia.nombre, "id": instancia.id}
+
     def __init__(self, nombre, id=-1) -> None:
         self.nombre = nombre
         self.id = id
@@ -18,7 +37,20 @@ class Director:
     def __hash__(self) -> int:
         return hash((self.id, self.nombre))
 
-class Pelicula:
+class Pelicula(Model):
+    @classmethod
+    def create_from_dict(cls, diccionario):
+        return cls(diccionario["titulo"], diccionario["sinopsis"], int(diccionario["director_id"]), int(diccionario["id"]))
+    
+    @classmethod
+    def create_dict_from_instance(cls, instancia):
+        return {
+            "id": instancia.id,
+            "titulo": instancia.titulo,
+            "sinopsis": instancia.sinopsis,
+            "director_id": instancia._director_id
+        }
+
     def __init__(self, titulo, sinopsis, director: object, id = -1) -> None:
         self.titulo = titulo
         self.sinopsis = sinopsis
@@ -41,7 +73,7 @@ class Pelicula:
             raise TypeError(f"{value} debe ser un entero o instancia de Director")
     
     def  __repr__(self) -> str:
-        return f"Pelicula: Título ({self.titulo}), Sinopsis {self.sinopsis} y Director {self.director.nombre}."
+        return f"Pelicula: Título ({self.titulo}), Sinopsis {self.sinopsis} y Director {self.director}."
     
     def __eq__(self, other: object) -> bool:
         isEqual = False
@@ -76,100 +108,61 @@ class DAO(ABC):
     def todos(self):
         pass
 
-class DAO_CSV_Director(DAO):
-    
-    def __init__(self, path):
+class DAO_CSV(DAO):
+    model = None
+
+    def __init__(self, path, enconding = "utf-8"):
         self.path = path
-
-    def guardar(self, instancia):
-        with open(self.path, "a", newline="") as fichero:
-            escribir_csv = csv.DictWriter(fichero, delimiter = ";", quotechar = "'", fieldnames = ['nombre','id'], lineterminator='\n')
-            escribir_csv.writerow({"nombre": instancia.nombre, "id": instancia.id})
-    
-    def borrar(self, id): # tengo que escribir el CSV entero?? DUDA
-        director = self.consultar(id)
-        directores = self.todos()
-        if director in directores:
-            directores.remove(director)
-        with open(self.path, "w", newline="") as fichero:
-            escribir_csv = csv.DictWriter(fichero, delimiter=";", quotechar="'", fieldnames=['nombre', 'id'], lineterminator='\n') # lineterminator en google
-            escribir_csv.writeheader() # lo he tenido que consultar porque me escirbía sin las etiquetas nombre e id
-            for director in directores:
-                escribir_csv.writerow({"nombre": director.nombre, "id": director.id})
-                        
-    def consultar(self, id):
-        directores = self.todos()
-        for director in directores:
-            if director.id == id:
-                return director
-        return None
+        self.encoding = enconding
 
     def todos(self):
-        with open(self.path, "r", newline="") as fichero:
+        with open(self.path, "r", newline="", encoding = self.encoding) as fichero:
             lector_csv = csv.DictReader(fichero, delimiter=";", quotechar="'")
             lista = []
             for registro in lector_csv:
-                lista.append(Director(registro["nombre"], int(registro["id"])))
+                lista.append(self.model.create_from_dict(registro))
         return lista
     
-    def actualizar(self, instancia):
-        directores = self.todos()
-        for i, director in enumerate(directores):
-            if director.id == instancia.id:
-                directores[i] = instancia # si coincide los id de director y el que metimos lo sustituye por el que metimos con los nuevos datos
-        with open(self.path, "w", newline="") as fichero:
-            escribir_csv = csv.DictWriter(fichero, delimiter=";", quotechar="'", fieldnames=['nombre', 'id'], lineterminator='\n')
-            escribir_csv.writeheader()
-            for director in directores:
-                escribir_csv.writerow({"nombre": director.nombre, "id": director.id})
-
-class DAO_CSV_Pelicula(DAO):
-    def __init__(self, path):
-        self.path = path 
-
     def guardar(self, instancia):
-        with open(self.path, "a", newline="") as fichero:
-            escribir_csv = csv.DictWriter(fichero, delimiter=";", quotechar="'", fieldnames=["id", "titulo", "sinopsis", "director_id"], lineterminator='\n')
-            escribir_csv.writerow({"id": instancia.id, "titulo": instancia.titulo, "sinopsis": instancia.sinopsis, "director_id": instancia._director_id})
-
-    def todos(self):
-        with open(self.path, "r", newline="") as fichero:
-            lector_csv = csv.DictReader(fichero, delimiter=";", quotechar="'")
-            lista = []
-            for registro in lector_csv:
-                try:
-                    id = int(registro["id"])
-                    director_id = int(registro["director_id"])
-                    lista.append(Pelicula(registro["titulo"], registro["sinopsis"], director_id, id))
-                except ValueError as e:
-                    print(f"Error processing record {registro}: {e}")
-        return lista
-
+        diccionario = self.model.create_dict_from_instance(instancia)
+        with open(self.path, "a", newline="", encoding = self.encoding) as fichero:
+            escribir_csv = csv.DictWriter(fichero, delimiter = ";", quotechar = "'", fieldnames = list(diccionario.keys()), lineterminator='\n')
+            escribir_csv.writerow(diccionario)
+    
     def consultar(self, id):
-        peliculas = self.todos()
-        for pelicula in peliculas:
-            if pelicula.id == id:
-                return pelicula
+        lista_consulta = self.todos()
+        for consulta in lista_consulta:
+            if consulta.id == id:
+                return consulta
         return None
     
     def borrar(self, id):
-        pelicula = self.consultar(id)
-        peliculas = self.todos()
-        if pelicula in peliculas:
-            peliculas.remove(pelicula)
-        with open(self.path, "w", newline="") as fichero:
-            escribir_csv = csv.DictWriter(fichero, delimiter=";", quotechar="'", fieldnames=["id","titulo","sinopsis","director_id"], lineterminator='\n') # lineterminator en google
-            escribir_csv.writeheader() # lo he tenido que consultar porque me escirbía sin las etiquetas nombre e id
-            for pelicula in peliculas:
-                escribir_csv.writerow({"id": pelicula.id, "titulo": pelicula.titulo, "sinopsis": pelicula.sinopsis, "director_id": pelicula._director_id})
+        consulta = self.consultar(id)
+        lista_consulta = self.todos()
+        if consulta in lista_consulta:
+            lista_consulta.remove(consulta)
+        fieldnames = list(self.model.create_dict_from_instance(consulta).keys())
+        with open(self.path, "w", newline="", encoding=self.encoding) as fichero:
+            escribir_csv = csv.DictWriter(fichero, delimiter=";", quotechar="'", fieldnames=fieldnames, lineterminator='\n')
+            escribir_csv.writeheader()
+            for registro in lista_consulta:
+                escribir_csv.writerow(self.model.create_dict_from_instance(registro))
     
     def actualizar(self, instancia):
-        peliculas = self.todos()
-        for i, pelicula in enumerate(peliculas):
-            if pelicula.id == instancia.id:
-                peliculas[i] = instancia # si coincide los id de pelicula y el que metimos lo sustituye por el que metimos con los nuevos datos
-        with open(self.path, "w", newline="") as fichero:
-            escribir_csv = csv.DictWriter(fichero, delimiter=";", quotechar="'", fieldnames=["id", "titulo", "sinopsis", "director_id"], lineterminator='\n')
+        lista_consulta = self.todos()
+        for i, registro in enumerate(lista_consulta):
+            if registro.id == instancia.id:
+                lista_consulta[i] = instancia
+        fieldnames = list(self.model.create_dict_from_instance(instancia).keys())
+        with open(self.path, "w", newline="", encoding=self.encoding) as fichero:
+            escribir_csv = csv.DictWriter(fichero, delimiter=";", quotechar="'", fieldnames=fieldnames, lineterminator='\n')
             escribir_csv.writeheader()
-            for pelicula in peliculas:
-                escribir_csv.writerow({"id": pelicula.id, "titulo": pelicula.titulo, "sinopsis": pelicula.sinopsis, "director_id": pelicula._director_id})
+            for registro in lista_consulta:
+                escribir_csv.writerow(self.model.create_dict_from_instance(registro))
+
+class DAO_CSV_Director(DAO_CSV):    
+    model = Director
+    
+class DAO_CSV_Pelicula(DAO_CSV):
+    model = Pelicula
+    
