@@ -1,4 +1,5 @@
-from app.modelos import Director, Pelicula, DAO_CSV_Director, DAO_CSV_Pelicula
+from app.modelos import Director, Pelicula, Generos
+from app.daos import DAO_CSV_Director, DAO_CSV_Pelicula, DAO_CSV_Generos
 
 def test_create_director():
     director = Director("Robert Redford", -1)
@@ -141,3 +142,65 @@ def test_dao_peliculas_actualizar_pelicula():
 
     pelicula.titulo = "Un amor contra viento y marea"  # Restaurar valor original
     dao.actualizar(pelicula)
+
+def test_create_genero():
+    genero = Generos("Accion", 1)
+
+    assert genero.genero == "Accion"
+    assert genero.id == 1
+
+def test_dao_generos_traer_todos():
+    dao = DAO_CSV_Generos("tests/data/generos.csv")
+    generos = dao.todos()
+
+    assert len(generos) == 14
+    assert generos[0] == Generos("Accion", 1)
+
+def test_dao_generos_guardar_genero():
+    dao = DAO_CSV_Generos("tests/data/generos.csv")
+    
+    nuevo_genero = Generos("Ciencia Ficcion", 14)
+    dao.guardar(nuevo_genero)
+    generos = dao.todos()
+
+    assert len(generos) == 15
+    assert generos[-1] == nuevo_genero
+
+    dao.borrar(14)
+    generos = dao.todos()
+    assert len(generos) == 14
+
+def test_dao_generos_consultar():
+    dao = DAO_CSV_Generos("tests/data/generos.csv")
+    genero = dao.consultar(3)
+
+    assert genero == Generos("Aventura", 3)
+
+def test_dao_generos_borrar_genero():
+    dao = DAO_CSV_Generos("tests/data/generos.csv")
+    
+    dao.borrar(13)
+    generos = dao.todos()
+
+    assert len(generos) == 13
+    assert Generos("Western", 13) not in generos
+
+    dao.guardar(Generos("Western", 13))
+    generos = dao.todos()
+    assert len(generos) == 14
+
+def test_dao_generos_actualizar_genero():
+    dao = DAO_CSV_Generos("tests/data/generos.csv")
+    
+    genero = dao.consultar(1)
+    original_genero = genero.genero
+    genero.genero = "Accion Actualizada"
+    dao.actualizar(genero)
+    
+    genero_actualizado = dao.consultar(1)
+    assert genero_actualizado.genero == "Accion Actualizada"
+
+    genero.genero = original_genero  # Restaurar valor original
+    dao.actualizar(genero)
+    genero_restaurado = dao.consultar(1)
+    assert genero_restaurado.genero == original_genero
