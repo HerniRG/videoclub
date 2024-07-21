@@ -1,5 +1,5 @@
-from app.modelos import Director, Pelicula, Generos
-from app.daos import DAO_CSV_Director, DAO_CSV_Pelicula, DAO_CSV_Generos
+from app.modelos import Copias, Director, Pelicula, Generos
+from app.daos import DAO_CSV_Copias, DAO_CSV_Director, DAO_CSV_Pelicula, DAO_CSV_Generos
 
 def test_create_director():
     director = Director("Robert Redford", -1)
@@ -204,3 +204,58 @@ def test_dao_generos_actualizar_genero():
     dao.actualizar(genero)
     genero_restaurado = dao.consultar(1)
     assert genero_restaurado.genero == original_genero
+
+def test_create_copias():
+    copia = Copias(1, 1)
+
+    assert copia.id_pelicula == 1
+    assert copia.id == 1
+
+def test_dao_copias_traer_todos():
+    dao = DAO_CSV_Copias("tests/data/copias.csv")
+    copias = dao.todos()
+
+    assert len(copias) == 9
+    assert copias[0] == Copias(1, 1)
+
+def test_dao_copias_guardar_copia():
+    dao = DAO_CSV_Copias("tests/data/copias.csv")
+    
+    nueva_copia = Copias(5, 10)
+    dao.guardar(nueva_copia)
+    copias = dao.todos()
+
+    assert len(copias) == 10
+    assert copias[-1] == nueva_copia
+
+    dao.borrar(10)
+
+def test_dao_copias_consultar():
+    dao = DAO_CSV_Copias("tests/data/copias.csv")
+    copia = dao.consultar(1)
+
+    assert copia == Copias(1, 1)
+
+def test_dao_copias_borrar_copia():
+    dao = DAO_CSV_Copias("tests/data/copias.csv")
+    
+    dao.borrar(9)
+    copias = dao.todos()
+
+    assert len(copias) == 8
+    assert Copias(4, 9) not in copias
+
+    dao.guardar(Copias(4, 9))
+
+def test_dao_copias_actualizar_copia():
+    dao = DAO_CSV_Copias("tests/data/copias.csv")
+    
+    copia = dao.consultar(1)
+    copia.id_pelicula = 2
+    dao.actualizar(copia)
+    
+    copia_actualizada = dao.consultar(1)
+    assert copia_actualizada.id_pelicula == 2
+
+    copia.id_pelicula = 1  # Restaurar valor original
+    dao.actualizar(copia)

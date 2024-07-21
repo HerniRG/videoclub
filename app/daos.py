@@ -1,28 +1,20 @@
 import csv
 from abc import ABC, abstractmethod
-from app.modelos import Director, Generos, Pelicula
-
+from app.modelos import Copias, Director, Generos, Pelicula
 
 class DAO(ABC):
-    
     @abstractmethod
     def guardar(self, instancia):
         pass
-    
     @abstractmethod
     def actualizar(self, instancia):
         pass
-    
-
     @abstractmethod
     def borrar(self, id):
         pass
-    
-
     @abstractmethod
     def consultar(self, id):
         pass
-    
     @abstractmethod
     def todos(self):
         pass
@@ -87,3 +79,6 @@ class DAO_CSV_Pelicula(DAO_CSV):
 
 class DAO_CSV_Generos(DAO_CSV):
     model = Generos
+
+class DAO_CSV_Copias(DAO_CSV):
+    model = Copias

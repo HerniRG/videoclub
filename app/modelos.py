@@ -106,3 +106,27 @@ class Generos(Model):
     
     def __hash__(self) -> int:
         return hash((self.id, self.genero))
+    
+class Copias(Model):
+    @classmethod
+    def create_from_dict(cls, diccionario):
+        return cls(int(diccionario["id_pelicula"]), int(diccionario["id_copia"]))
+    
+    @classmethod
+    def create_dict_from_instance(cls, instancia):
+        return {"id_copia": instancia.id, "id_pelicula": instancia.id_pelicula}
+    
+    def __init__(self,id_pelicula, id = -1) -> None:
+        self.id_pelicula = id_pelicula
+        self.id = id
+    
+    def __repr__(self) -> str:
+        return f"Copia ID {self.id}, Pelicula ID {self.id_pelicula}"
+    
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.id_pelicula == other.id_pelicula and self.id == other.id
+        return False
+    
+    def __hash__(self) -> int:
+        return hash((self.id, self.id_pelicula))
