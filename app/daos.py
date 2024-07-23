@@ -1,5 +1,6 @@
 import csv
 from abc import ABC, abstractmethod
+import sqlite3
 from app.modelos import Copias, Director, Generos, Pelicula
 
 class DAO(ABC):
@@ -82,3 +83,47 @@ class DAO_CSV_Generos(DAO_CSV):
 
 class DAO_CSV_Copias(DAO_CSV):
     model = Copias
+
+class DAO_SQLite(DAO):
+    model = None
+    table = None
+
+    def __init__(self, path):
+        self.path = path
+    
+    def todos(self):
+        conexion = sqlite3.connect(self.path)
+        cursor = conexion.cursor()
+        # Ejecutar consulta
+        cursor.execute(f"select * from {self.table}")
+        # Obtener resultados y descripción de columnas
+        resultados = cursor.fetchall()  
+        descripcion_columnas = cursor.description
+        columnas_finales = list(map(lambda i: i[0], descripcion_columnas))
+        lista = self.__rows_to_dictlist(resultados, columnas_finales)
+        conexion.close()
+        return lista
+    
+    def actualizar(self, instancia):
+        return super().actualizar(instancia)
+    def consultar(self, id):
+        return super().consultar(id)
+    def borrar(self, id):
+        return super().borrar(id)
+    def guardar(self, instancia):
+        return super().guardar(instancia)
+        
+    
+    def __rows_to_dictlist(self, filas, nombres):
+        lista_registros_bbdd = []
+        for registro in filas:
+            registro_diccionario = {}
+            for i, nombre_columna in enumerate(nombres):       
+                registro_diccionario[nombre_columna] = registro[i]
+            lista_registros_bbdd.append(self.model.create_from_dict(registro_diccionario)) # lo hacemos aqui para no hacer 2 bucles
+        return lista_registros_bbdd
+
+
+class DAO_SQLite_Director(DAO_SQLite):
+    model = Director
+    table = "directores"
