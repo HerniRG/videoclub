@@ -268,3 +268,51 @@ def test_dao_directores_sqlite_traer_todos():
 
     assert len(directores) == 76
     assert directores[7] == Director("Charlie Chaplin", 8)
+
+def test_dao_directores_sqlite_guardar_director():
+    dao = DAO_SQLite_Director("data/films.sqlite")
+    
+    nuevo_director = Director("Wolframio", 77)
+    dao.guardar(nuevo_director)
+    directores = dao.todos()
+
+    assert len(directores) == 77
+    assert directores[-1] == nuevo_director
+
+    dao.borrar(77)
+    directores = dao.todos()
+    assert len(directores) == 76
+
+def test_dao_directores_sqlite_consultar():
+    dao = DAO_SQLite_Director("data/films.sqlite")
+    alfred = dao.consultar(3)
+
+    assert alfred == Director("Alfred Hitchcock", 3)
+
+def test_dao_directores_sqlite_borrar_director():
+    dao = DAO_SQLite_Director("data/films.sqlite")
+    
+    dao.borrar(8)
+    directores = dao.todos()
+
+    assert len(directores) == 75
+    assert Director("Charlie Chaplin", 8) not in directores
+
+    dao.guardar(Director("Charlie Chaplin", 8))
+    directores = dao.todos()
+    assert len(directores) == 76
+
+def test_dao_directores_sqlite_actualizar_director():
+    dao = DAO_SQLite_Director("data/films.sqlite")
+    
+    director = dao.consultar(1)
+    director.nombre = "Wolframio Actualizado"
+    dao.actualizar(director)
+    
+    director_actualizado = dao.consultar(1)
+    assert director_actualizado.nombre == "Wolframio Actualizado"
+
+    director.nombre = "Director 1"  # Restaurar valor original
+    dao.actualizar(director)
+    director_restaurado = dao.consultar(1)
+    assert director_restaurado.nombre == "Director 1"

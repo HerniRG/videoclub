@@ -13,9 +13,24 @@ CREATE TABLE IF NOT EXISTS "peliculas" (
 	"sinopsis"	TEXT,
 	"id_genero"	INTEGER,
 	FOREIGN KEY("director_id") REFERENCES "directores"("id"),
+	FOREIGN KEY("id_genero") REFERENCES "generos"("id"),
     PRIMARY KEY("id" AUTOINCREMENT)
 );
 
+CREATE TABLE IF NOT EXISTS "generos" (
+	"id"	INTEGER,
+	"genero"	TEXT NOT NULL,
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
+
+CREATE TABLE IF NOT EXISTS "copias" (
+	"id"	INTEGER,
+	"id_pelicula"	INTEGER NOT NULL,
+	FOREIGN KEY("id_pelicula") REFERENCES "peliculas"("id"),
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
+
+-- Insertar datos iniciales en la tabla directores
 INSERT INTO "directores" ("id","nombre") VALUES (1,'Aditya Chopra');
 INSERT INTO "directores" ("id","nombre") VALUES (2,'Akira Kurosawa');
 INSERT INTO "directores" ("id","nombre") VALUES (3,'Alfred Hitchcock');
@@ -92,5 +107,35 @@ INSERT INTO "directores" ("id","nombre") VALUES (73,'Takahiro Omori');
 INSERT INTO "directores" ("id","nombre") VALUES (74,'Tony Kaye');
 INSERT INTO "directores" ("id","nombre") VALUES (75,'Tosca Musk');
 INSERT INTO "directores" ("id","nombre") VALUES (76,'Xavier Dolan');
+
+-- Insertar datos iniciales en la tabla generos
+INSERT INTO "generos" ("id","genero") VALUES (1,'Accion');
+INSERT INTO "generos" ("id","genero") VALUES (2,'Aventura');
+INSERT INTO "generos" ("id","genero") VALUES (3,'Comedia');
+INSERT INTO "generos" ("id","genero") VALUES (4,'Drama');
+INSERT INTO "generos" ("id","genero") VALUES (5,'Fantasia');
+INSERT INTO "generos" ("id","genero") VALUES (6,'Terror');
+INSERT INTO "generos" ("id","genero") VALUES (7,'Misterio');
+INSERT INTO "generos" ("id","genero") VALUES (8,'Romance');
+INSERT INTO "generos" ("id","genero") VALUES (9,'Ciencia Ficcion');
+INSERT INTO "generos" ("id","genero") VALUES (10,'Suspense');
+INSERT INTO "generos" ("id","genero") VALUES (11,'Western');
+INSERT INTO "generos" ("id","genero") VALUES (12,'Animacion');
+INSERT INTO "generos" ("id","genero") VALUES (13,'Documental');
+INSERT INTO "generos" ("id","genero") VALUES (14,'Musical');
+
+-- Insertar datos iniciales en la tabla peliculas
+INSERT INTO "peliculas" ("id", "titulo", "director_id", "sinopsis", "id_genero") VALUES (1, 'El señor de los anillos', 57, 'Sauron es muy malo', 9);
+INSERT INTO "peliculas" ("id", "titulo", "director_id", "sinopsis", "id_genero") VALUES (2, 'Los siete samuráis', 2, 'Una banda de forajidos atemorizan a los habitantes de un pequeño pueblo, saqueándolos periódicamente sin piedad. Para repeler estos ataques, los aldeanos deciden contratar a mercenarios. Finalmente, consiguen los servicios de 7 guerreros, 7 samurais dispuestos a defenderlos a cambio, tan solo, de cobijo y comida.', 1);
+INSERT INTO "peliculas" ("id", "titulo", "director_id", "sinopsis", "id_genero") VALUES (3, 'El infierno del odio', 2, 'Gondo, un hombre de negocios, recibe la noticia de que su hijo ha sido secuestrado, y el rescate exigido es una cantidad de dinero similar a la que necesita para cerrar una importante negociación. Gondo está dispuesto a pagar el rescate hasta que comprende que los secuestradores se han equivocado y se han llevado al hijo del chófer. Ahora deberá decidir si el dinero es más importante que la vida del niño.', 10);
+INSERT INTO "peliculas" ("id", "titulo", "director_id", "sinopsis", "id_genero") VALUES (4, 'Un amor contra viento y marea', 1, 'Una historia de amor épica en tiempos difíciles.', 8);
+INSERT INTO "peliculas" ("id", "titulo", "director_id", "sinopsis", "id_genero") VALUES (5, 'El viaje de Chihiro', 25, 'Una niña atraviesa un mundo mágico en busca de sus padres.', 5);
+
+-- Insertar datos iniciales en la tabla copias
+INSERT INTO "copias" ("id", "id_pelicula") VALUES (1, 1);
+INSERT INTO "copias" ("id", "id_pelicula") VALUES (2, 2);
+INSERT INTO "copias" ("id", "id_pelicula") VALUES (3, 3);
+INSERT INTO "copias" ("id", "id_pelicula") VALUES (4, 4);
+INSERT INTO "copias" ("id", "id_pelicula") VALUES (5, 5);
 
 COMMIT;

@@ -95,23 +95,53 @@ class DAO_SQLite(DAO):
         conexion = sqlite3.connect(self.path)
         cursor = conexion.cursor()
         # Ejecutar consulta
-        cursor.execute(f"select * from {self.table}")
+        cursor.execute(f"SELECT * FROM {self.table}")
         # Obtener resultados y descripción de columnas
         resultados = cursor.fetchall()  
-        descripcion_columnas = cursor.description
-        columnas_finales = list(map(lambda i: i[0], descripcion_columnas))
+        columnas_finales = list(map(lambda i: i[0], cursor.description))
         lista = self.__rows_to_dictlist(resultados, columnas_finales)
         conexion.close()
         return lista
     
-    def actualizar(self, instancia):
-        return super().actualizar(instancia)
     def consultar(self, id):
-        return super().consultar(id)
+        conexion = sqlite3.connect(self.path)
+        cursor = conexion.cursor()
+        cursor.execute(f"SELECT * FROM {self.table} WHERE id = ?", (id,))
+        resultado = cursor.fetchone()
+        conexion.close()
+        if resultado:
+            descripcion_columnas = list(map(lambda i: i[0], cursor.description))
+            registro_diccionario = {descripcion_columnas[i]: resultado[i] for i in range(len(descripcion_columnas))}
+            return self.model.create_from_dict(registro_diccionario)
+        return None
+
+    def actualizar(self, instancia):
+        diccionario = self.model.create_dict_from_instance(instancia)
+        campos = ', '.join([f"{key} = ?" for key in diccionario.keys()])
+        valores = list(diccionario.values())
+        conexion = sqlite3.connect(self.path)
+        cursor = conexion.cursor()
+        cursor.execute(f"UPDATE {self.table} SET {campos} WHERE id = ?", valores + [instancia.id])
+        conexion.commit()
+        conexion.close()
+    
     def borrar(self, id):
-        return super().borrar(id)
+        conexion = sqlite3.connect(self.path)
+        cursor = conexion.cursor()
+        cursor.execute(f"DELETE FROM {self.table} WHERE id = ?", (id,))
+        conexion.commit()
+        conexion.close()
+    
     def guardar(self, instancia):
-        return super().guardar(instancia)
+        diccionario = self.model.create_dict_from_instance(instancia)
+        campos = ', '.join(diccionario.keys())
+        placeholders = ', '.join(['?' for _ in diccionario.values()])
+        valores = list(diccionario.values())
+        conexion = sqlite3.connect(self.path)
+        cursor = conexion.cursor()
+        cursor.execute(f"INSERT INTO {self.table} ({campos}) VALUES ({placeholders})", valores)
+        conexion.commit()
+        conexion.close()
         
     
     def __rows_to_dictlist(self, filas, nombres):
@@ -127,3 +157,15 @@ class DAO_SQLite(DAO):
 class DAO_SQLite_Director(DAO_SQLite):
     model = Director
     table = "directores"
+
+class DAO_SQLite_Pelicula(DAO_SQLite):
+    model = Pelicula
+    table = "peliculas"
+
+class DAO_SQLite_Generos(DAO_SQLite):
+    model = Generos
+    table = "generos"
+
+class DAO_SQLite_Copias(DAO_SQLite):
+    model = Copias
+    table = "copias"
